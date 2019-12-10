@@ -19,6 +19,6 @@ const fragmentShader = `#version 300 es
     out vec4 o_color;
     
     void main() {
-        o_color = vec4(126.0 / 255.0, 126.0 / 255.0, 126.0 / 255.0, 1.0);
+        o_color = vec4(255.0 / 255.0, 255.0 / 255.0, 255.0 / 255.0, 1.0);
     }
 `;
