@@ -10,6 +10,7 @@
 
 var teapotVertex = [];
 var teapotFragment = [];
+var orderedFaces = [];
 var numOfComponents = 3;        // x, y and z (3d)
 var offset = 0;
 var normalize = false;
@@ -40,13 +41,13 @@ function main() {
     readTeapotModelFile(render);
     
     // ROTATION ANIMATION
-    function render () {    
-    
+    function render () {
+
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         
         // TRIANGLES
         gl.bindBuffer(gl.ARRAY_BUFFER, teapotBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(teapotVertex), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, flatten(orderedFaces), gl.STATIC_DRAW);
     
         // TRIANGLE POSITIONS
         offset = 0;
@@ -55,8 +56,8 @@ function main() {
         gl.useProgram(teapotShader);
         
         // DRAW TRIANGLES
-        console.log(teapotVertex.length);
-        gl.drawArrays(gl.TRIANGLES, offset, 1292);
+        //console.log(teapotVertex.length);
+        gl.drawArrays(gl.TRIANGLES, offset, orderedFaces.length);
         
         
         
@@ -66,16 +67,19 @@ function main() {
     //render();
 }
 
-function readTeapotModelFile (callback) {
-    $.get('teapot.smf', function(data) {
+async function readTeapotModelFile (callback) {
+    await $.get('teapot.smf', function(data) {
         var lines = data.split("\n");
 
         $.each(lines, function(n, elem) {
             var res = elem.split(" ");
             if (res[0] == "v") {
-                teapotVertex.push(res[1], res[2], res[3]);
+                teapotVertex.push(vec3(res[1], res[2], res[3]));
             } else if (res[0] == "f") {
-                teapotFragment.push(res[1], res[2], res[3]);
+                //teapotFragment.push(res[1], res[2], res[3]);
+                orderedFaces.push(teapotVertex[res[1] - 1]);
+                orderedFaces.push(teapotVertex[res[2] - 1]);
+                orderedFaces.push(teapotVertex[res[3] - 1]);
             }
         });
     }, 'text');
