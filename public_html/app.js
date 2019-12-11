@@ -10,10 +10,26 @@
 
 var teapotVertex = [];
 var orderedFaces = [];
+var surfaceVertex = [];
 var numOfComponents = 3;        // x, y and z (3d)
 var offset = 0;
 var normalize = false;
 var stride = 0;
+var rotateTheta = 0.0;
+var rotate = false;
+var rotateStep = 1.0;
+var at = vec3(0.0,0.0,0.0);
+var up = vec3(0.0,1.0,0.0);
+var eye;
+var phi = 0.0;
+var theta = 0.0;
+var projectionMatrix;
+var modelViewMatrix;
+var near = 0.3;
+var far = 10.0;     // ne kadar far o kadar view volume un icinde
+var radius = 5.0;   // ne kadar radius o kadar uzak
+var fovy = 45.0;    // ne kadar fovy o kadar uzak
+var aspect = 1.0;
 
 function main() {
     const canvas = document.querySelector("#glCanvas");
@@ -24,21 +40,30 @@ function main() {
         return;
     }
     
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    aspect = canvas.width / canvas.height;
+    
     gl.clearColor(170 / 255.0, 178 / 255.0, 167 / 255.0, 1.0);       // yellow
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     var type = gl.FLOAT;
+    
+    readTeapotModelFile(render);
 
     const teapotShader = initShaderProgram(gl, vertexShader, fragmentShader);
     const teapotBuffer = gl.createBuffer();
     gl.enableVertexAttribArray(gl.getAttribLocation(teapotShader, 'i_position'));
-    
-    readTeapotModelFile(render);
-    
-    // ROTATION ANIMATION
+    var shaderRotateTheta = gl.getUniformLocation(teapotShader, 'u_rotate_theta');
+    var shaderModelView = gl.getUniformLocation(teapotShader, 'u_model_view');
+    var shaderProjection = gl.getUniformLocation(teapotShader, 'u_projection');
+
     function render () {
+        
+        if (rotate) {
+               rotateTheta += rotateStep;         
+        }
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.bindBuffer(gl.ARRAY_BUFFER, teapotBuffer);
@@ -50,48 +75,75 @@ function main() {
             numOfComponents, type, normalize, stride, offset);
         gl.useProgram(teapotShader);
         
+        // assign matrices
+        eye = vec3(radius * Math.sin(theta) * Math.cos(phi), 
+                    radius * Math.sin(theta) * Math.sin(phi), radius * Math.cos(theta));
+        modelViewMatrix = lookAt(eye, at, up);
+        projectionMatrix = perspective(fovy, aspect, near, far);
+        
+        // send uniforms
+        gl.uniform1f(shaderRotateTheta, rotateTheta);
+        gl.uniformMatrix4fv(shaderModelView, false, flatten(modelViewMatrix));
+        gl.uniformMatrix4fv(shaderProjection, false, flatten(projectionMatrix));
+        
         // DRAW SCENE
         gl.drawArrays(gl.TRIANGLES, offset, orderedFaces.length);
-        requestAnimationFrame(render);
+        //if (rotate){
+            requestAnimationFrame(render);
+        //}
     }
-    
+
     document.addEventListener('keydown', function(event) {
     
         switch(event.keyCode) {
             // + key
             case 107:
-                console.log("+");
+                rotateStep += 1.0;
+                if (rotate == false) {
+                    rotate = true;
+                    render();
+                }
                 break;
             // - key
             case 109:
-                console.log("-");
+                rotateStep -= 1.0;
+                if (rotate == false) {
+                    rotate = true;
+                    render();
+                }
                 break;
             // up arrow
             case 38:
                 console.log("up arrow");
+                radius -= 0.1;
                 break;
             // down arrow
             case 40:
                 console.log("down arrow");
+                radius += 0.1;
                 break;
             // right arrow
             case 39:
                 console.log("right arrow");
+                at[0] += 0.1;
                 break;
             // left arrow
             case 37:
                 console.log("left arrow");
+                at[0] -= 0.1;
                 break;
             // page up key
             case 33:
                 console.log("page up");
+                at[1] += 0.1;
                 break;
             // page down key
             case 34:
                 console.log("page down");
+                at[1] -= 0.1;
                 break;
-            // p key
-            case 80: 
+            // e key
+            case 69: 
                if(document.pointerLockElement === canvas ||
                        document.mozPointerLockElement === canvas) {
                    // unlock it
@@ -115,8 +167,8 @@ function main() {
     });
     
     function updatePosition(e) {
-        console.log(e.movementX * Math.PI/180.0);
-        console.log(e.movementY * Math.PI/180.0);
+        phi += e.movementX * Math.PI/180.0;
+        theta += e.movementY * Math.PI/180.0;
     }
 }
 
@@ -136,6 +188,10 @@ async function readTeapotModelFile (callback) {
         });
     }, 'text');
     callback();
+}
+
+function initilizeSurface () {
+    
 }
 
 main();

@@ -7,9 +7,19 @@
 const vertexShader = `#version 300 es
 
     in vec3 i_position;
+    uniform float u_rotate_theta;
+    uniform mat4 u_model_view;
+    uniform mat4 u_projection;
 
     void main() {
-        gl_Position = vec4(i_position, 1.0);
+        float rotate_radian = radians(u_rotate_theta);
+        float rotate_sin = sin(rotate_radian);
+        float rotate_cos = cos(rotate_radian);
+        mat4 ry = mat4(rotate_cos, 0.0, -rotate_sin, 0.0,
+                        0.0, 1.0, 0.0, 0.0,
+                        rotate_sin, 0.0, rotate_cos, 0.0,
+                        0.0, 0.0, 0.0, 1.0);
+        gl_Position = u_projection * u_model_view * ry * vec4(i_position, 1.0);
     }
 `;
 

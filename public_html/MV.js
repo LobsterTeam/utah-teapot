@@ -506,7 +506,7 @@ function rotate( angle, axis )
     axis = vec3(arguments[1], arguments[2], arguments[3]);
   }
     if(axis.type != 'vec3') throw "rotate: axis not a vec3";
-    var v = normalize( axis );
+    var v = normalizeFun( axis );
 
     var x = v[0];
     var y = v[1];
@@ -607,9 +607,9 @@ function lookAt( eye, at, up )
         return mat4();
     }
 
-    var v = normalize( subtract(at, eye) );  // view direction vector
-    var n = normalize( cross(v, up) ); // perpendicular vector
-    var u = normalize( cross(n, v) );        // "new" up vector
+    var v = normalizeFun( subtract(at, eye) );  // view direction vector
+    var n = normalizeFun( cross(v, up) ); // perpendicular vector
+    var u = normalizeFun( cross(n, v) );        // "new" up vector
     v = negate( v );
 
     var result = mat4(
@@ -787,11 +787,11 @@ function length( u )
 
 //----------------------------------------------------------------------------
 
-function normalize( u, excludeLastComponent )
+function normalizeFun( u, excludeLastComponent )
 {
     if(u.type != 'vec3' && u.type != 'vec4') {
 
-      throw "normalize: not a vector type";
+      throw "normalizeFun: not a vector type";
     }
     switch(u.type) {
       case 'vec2':
