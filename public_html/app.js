@@ -10,7 +10,6 @@
 
 var teapotVertex = [];
 var orderedFaces = [];
-var surfaceVertex = [];
 var numOfComponents = 3;        // x, y and z (3d)
 var offset = 0;
 var normalize = false;
@@ -26,9 +25,10 @@ var theta = 0.0;
 var projectionMatrix;
 var modelViewMatrix;
 var near = 0.3;
-var far = 10.0;     // ne kadar far o kadar view volume un icinde
+var far = 100.0;     // ne kadar far o kadar view volume un icinde
 var radius = 5.0;   // ne kadar radius o kadar uzak
 var fovy = 45.0;    // ne kadar fovy o kadar uzak
+var surfaceVertex = [vec3(-10.0, 10.0, 0.0), vec3(-10.0, -10.0, 0.0), vec3(10.0, -10.0, 0.0), vec3(10.0, -10.0, 0.0), vec3(10.0, 10.0, 0.0)];
 var aspect = 1.0;
 
 function main() {
@@ -58,6 +58,15 @@ function main() {
     var shaderRotateTheta = gl.getUniformLocation(teapotShader, 'u_rotate_theta');
     var shaderModelView = gl.getUniformLocation(teapotShader, 'u_model_view');
     var shaderProjection = gl.getUniformLocation(teapotShader, 'u_projection');
+    
+
+    const planeShader = initShaderProgram(gl, vertexShader, fragmentShader);
+    const planeBuffer = gl.createBuffer();
+    gl.enableVertexAttribArray(gl.getAttribLocation(planeShader, 'i_position'));
+    var planeTheta = gl.getUniformLocation(planeShader, 'u_rotate_theta');
+    var planeModelView = gl.getUniformLocation(planeShader, 'u_model_view');
+    var planeProjection = gl.getUniformLocation(planeShader, 'u_projection');
+    console.log(orderedFaces);
 
     function render () {
         
@@ -66,28 +75,49 @@ function main() {
         }
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        gl.bindBuffer(gl.ARRAY_BUFFER, teapotBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, flatten(orderedFaces), gl.STATIC_DRAW);
-    
-        // POSITIONS
-        offset = 0;
-        gl.vertexAttribPointer(gl.getAttribLocation(teapotShader, 'i_position'),
-            numOfComponents, type, normalize, stride, offset);
-        gl.useProgram(teapotShader);
-        
         // assign matrices
         eye = vec3(radius * Math.sin(theta) * Math.cos(phi), 
                     radius * Math.sin(theta) * Math.sin(phi), radius * Math.cos(theta));
         modelViewMatrix = lookAt(eye, at, up);
         projectionMatrix = perspective(fovy, aspect, near, far);
         
-        // send uniforms
+        // TEAPOT
+        gl.bindBuffer(gl.ARRAY_BUFFER, teapotBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, flatten(orderedFaces), gl.STATIC_DRAW);
+    
+        // TEAPOT POSITIONS
+        gl.vertexAttribPointer(gl.getAttribLocation(teapotShader, 'i_position'),
+            numOfComponents, type, normalize, stride, offset);
+        gl.useProgram(teapotShader);
+        
+        // TEAPOT UNIFORMS
         gl.uniform1f(shaderRotateTheta, rotateTheta);
         gl.uniformMatrix4fv(shaderModelView, false, flatten(modelViewMatrix));
         gl.uniformMatrix4fv(shaderProjection, false, flatten(projectionMatrix));
         
-        // DRAW SCENE
-        gl.drawArrays(gl.TRIANGLES, offset, orderedFaces.length);
+        // DRAW TEAPOT
+        gl.drawArrays(gl.TRIANGLES, offset, orderedFaces.length );
+ 
+        // PLANE
+        gl.bindBuffer(gl.ARRAY_BUFFER, planeBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, flatten(orderedFaces), gl.STATIC_DRAW);
+        
+        // PLANE POSITIONS
+        gl.vertexAttribPointer(gl.getAttribLocation(planeShader, 'i_position'),
+                numOfComponents, type, normalize, stride, orderedFaces.length - surfaceVertex.length);
+        gl.useProgram(planeShader);
+                
+        // PLANE UNIFORMS
+        gl.uniform1f(planeTheta, rotateTheta);
+        gl.uniformMatrix4fv(planeModelView, false, flatten(modelViewMatrix));
+        gl.uniformMatrix4fv(planeProjection, false, flatten(projectionMatrix));
+
+        // DRAW PLANE
+        gl.drawArrays(gl.TRIANGLES, offset, surfaceVertex.length);
+        
+        
+        
+        
         //if (rotate){
             requestAnimationFrame(render);
         //}
@@ -187,11 +217,11 @@ async function readTeapotModelFile (callback) {
             }
         });
     }, 'text');
+    
+    orderedFaces = orderedFaces.concat(surfaceVertex); // Append surface components to end of orderedFaces
+    console.log(orderedFaces);
     callback();
 }
 
-function initilizeSurface () {
-    
-}
 
 main();
