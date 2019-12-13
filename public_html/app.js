@@ -76,6 +76,9 @@ function main() {
         if (rotate) {
             rotateTheta += rotateStep;
         }
+        
+        canvas.height = $(window).height();
+        canvas.width = $(window).width();
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         // assign matrices
@@ -218,7 +221,7 @@ async function readTeapotModelFile (callback) {
             if (res[0] == "v") {
                 teapotVertex.push(vec3(res[1], res[2], res[3]));
             } else if (res[0] == "f") {
-                orde0redFaces.push(teapotVertex[res[1] - 1]);
+                orderedFaces.push(teapotVertex[res[1] - 1]);
                 orderedFaces.push(teapotVertex[res[2] - 1]);
                 orderedFaces.push(teapotVertex[res[3] - 1]);
             }
