@@ -44,9 +44,6 @@ function main() {
         return;
     }
     
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    aspect = canvas.width / canvas.height;
-    
     gl.clearColor(255 / 255.0, 255 / 255.0, 255 / 255.0, 1.0);       // white
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
@@ -74,6 +71,8 @@ function main() {
         
         canvas.height = $(window).height();
         canvas.width = $(window).width();
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        aspect = canvas.width / canvas.height;
         
         rotateTheta += rotateStep;
 
