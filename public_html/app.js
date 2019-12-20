@@ -15,19 +15,18 @@ var offset = 0;
 var normalize = false;
 var stride = 0;
 var rotateTheta = 0.0;
-var rotate = true;
 var rotateStep = 1.0;
-var at = vec3(0.0,0.0,0.0);
-var up = vec3(0.0,1.0,0.0);
+var at = vec3(0.0, 0.0, 0.0);
+var up = vec3(0.0, 1.0, 0.0);
 var eye;
 var phi = -9.5;
 var theta = -2.0;
 var projectionMatrix;
 var modelViewMatrix;
 var near = 0.3;
-var far = 100.0;     // ne kadar far o kadar view volume un icinde
-var radius = 5.0;   // ne kadar radius o kadar uzak
-var fovy = 45.0;    // ne kadar fovy o kadar uzak
+var far = 100.0;
+var radius = 5.0;
+var fovy = 45.0;
 var surfaceVertex = [vec3(-10.0, 0.0, 10.0), vec3(-10.0, 0.0, -10.0), vec3(10.0, 0.0, -10.0), 
                     vec3(10.0, 0.0, -10.0), vec3(10.0, 0.0, 10.0), vec3(-10.0, 0.0, 10.0)];
 var aspect = 1.0;
@@ -73,15 +72,13 @@ function main() {
 
     function render () {
         
-        if (rotate) {
-            rotateTheta += rotateStep;
-        }
-        
         canvas.height = $(window).height();
         canvas.width = $(window).width();
+        
+        rotateTheta += rotateStep;
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        // assign matrices
+        // calculate vectors and matrices
         eye = vec3(radius * Math.sin(theta) * Math.cos(phi), 
                     radius * Math.sin(theta) * Math.sin(phi), radius * Math.cos(theta));
         eye = add(eye, cameraTranslation);
@@ -115,16 +112,14 @@ function main() {
         gl.useProgram(planeShader);
 
         // PLANE UNIFORMS
-        gl.uniform1f(planeTheta, 0.0);
+        gl.uniform1f(planeTheta, 0.0);      // plane does not rotate so theta is 0
         gl.uniformMatrix4fv(planeModelView, false, flatten(modelViewMatrix));
         gl.uniformMatrix4fv(planeProjection, false, flatten(projectionMatrix));
 
         // DRAW PLANE
         gl.drawArrays(gl.TRIANGLES, 0, surfaceVertex.length);
         
-        //if (rotate){
-            requestAnimationFrame(render);
-        //}
+        requestAnimationFrame(render);
     }
 
     document.addEventListener('keydown', function(event) {
@@ -133,18 +128,10 @@ function main() {
             // + key
             case 107:
                 rotateStep += 1.0;
-                //if (rotate == false) {
-                 //   rotate = true;
-                //    render();
-                //}
                 break;
             // - key
             case 109:
                 rotateStep -= 1.0;
-                //if (rotate == false) {
-                //    rotate = true;
-                //    render();
-                //}
                 break;
             // up arrow
             case 38:
